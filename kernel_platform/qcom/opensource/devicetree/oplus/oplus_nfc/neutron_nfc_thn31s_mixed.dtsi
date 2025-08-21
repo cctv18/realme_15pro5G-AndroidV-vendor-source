@@ -1,0 +1,158 @@
+/**********************************************************************************
+* Copyright (c)  2008-2020  Guangdong oplus Mobile Comm Corp., Ltd
+* Description: oplus th31s nfc dtsi
+*
+***********************************************************************************/
+&tlmm {
+
+    nfc {
+        nfc_int_active: nfc_int_active {
+            /* active state */
+            mux {
+                /* NFC Read Interrupt */
+                pins = "gpio7";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio7";
+                drive-strength = <2>; /* 2 MA */
+                bias-pull-down;
+            };
+        };
+
+        nfc_int_suspend: nfc_int_suspend {
+            /* sleep state */
+            mux {
+                /* NFC Read Interrupt */
+                pins = "gpio7";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio7";
+                drive-strength = <2>; /* 2 MA */
+                bias-pull-down;
+            };
+        };
+
+        nfc_enable_active: nfc_enable_active {
+            mux {
+                /* Enable, Clock request gpios */
+                pins = "gpio6", "gpio117";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio6", "gpio117";
+                drive-strength = <2>; /* 2 MA */
+                bias-disable;
+            };
+        };
+
+        nfc_enable_suspend: nfc_enable_suspend {
+            mux {
+                pins = "gpio6", "gpio117";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio6", "gpio117";
+                drive-strength = <2>; /* 2 MA */
+                bias-disable;
+            };
+        };
+    };
+
+    nfcid_default: nfcid_default{
+        mux {
+            pins = "gpio126";
+            function = "gpio";
+        };
+        config {
+            pins = "gpio126";
+            drive-strength = <4>;
+            bias-disable;
+        };
+    };
+    nfcid_pulldown: nfcid_pulldown {
+        mux {
+            pins = "gpio126";
+            function = "gpio";
+        };
+        config {
+            pins = "gpio126";
+            drive-strength = <2>;
+            bias-pull-down;
+        };
+    };
+    nfcid_pullup: nfcid_pullup {
+        mux {
+            pins = "gpio126";
+            function = "gpio";
+        };
+        config {
+            pins = "gpio126";
+            drive-strength = <8>;
+            bias-pull-up;
+        };
+    };
+};
+
+
+&soc {
+    //add for nfc_chipset
+    nfc_chipset {
+         compatible = "oplus-nfc-chipset";
+         mixed-chipset = <1>;
+         id-gpio = <&tlmm 126 0x00>;
+         id_count = <3>;
+         id-0-key = <0>;
+         id-0-value-chipset = "THN31";
+         id-0-value-manifest-path = "/odm/etc/vintf/manifest/manifest_nfc_thn31.xml";
+         id-0-value-feature-path = "/odm/etc/permissions/com.oplus.nfc_feature.xml";
+         id-1-key = <1>;
+         id-1-value-chipset = "THN31DZ";
+         id-1-value-manifest-path = "/odm/etc/vintf/manifest/manifest_nfc_thn31.xml";
+         id-1-value-feature-path = "/odm/etc/permissions/com.oplus.nfc_feature.xml";
+         id-2-key = <2>;
+         id-2-value-chipset = "THN31";
+         id-2-value-manifest-path = "/odm/etc/vintf/manifest/manifest_nfc_thn31.xml";
+         id-2-value-feature-path = "/odm/etc/permissions/com.oplus.nfc_feature.xml";
+         pinctrl-names = "nfcid_default", "nfcid_pullup","nfcid_pulldown";
+         pinctrl-0 = <&nfcid_default>;
+         pinctrl-1 = <&nfcid_pullup>;
+         pinctrl-2 = <&nfcid_pulldown>;
+	};
+};
+
+&qupv3_se9_i2c {
+    status = "ok";
+    qcom,clk-freq-out = <400000>;
+    tms_thn31@28 {
+        compatible = "tms,nfc";
+        reg = <0x28>;
+        mixed-chipset = <1>;
+        id-gpio = <&tlmm 126 0x00>;
+        id_count = <3>;
+        id-0-key = <0>;
+        id-0-value-chipset = "THN31";
+        id-1-key = <1>;
+        id-1-value-chipset = "THN31DZ";
+        id-2-key = <2>;
+        id-2-value-chipset = "THN31";
+        tms,irq-gpio = <&tlmm 7 0x00>;
+        tms,ven-gpio = <&tlmm 117 0x00>;
+        //tms,download-gpio = <&tlmm 14 0x00>;
+        //qcom,nq-clkreq = <&tlmm 6 0x00>;
+        interrupt-parent = <&tlmm>;
+        interrupts = <7 0>;
+        interrupt-names = "nfc_irq";
+        pinctrl-names = "nfc_active", "nfc_suspend", "nfcid_default", "nfcid_pullup", "nfcid_pulldown";
+        pinctrl-0 = <&nfc_int_active &nfc_enable_active>;
+        pinctrl-1 = <&nfc_int_suspend &nfc_enable_suspend>;
+        pinctrl-2 = <&nfcid_default>;
+        pinctrl-3 = <&nfcid_pullup>;
+        pinctrl-4 = <&nfcid_pulldown>;
+    };
+};

@@ -1,0 +1,106 @@
+&soc {
+	//add for nfc_chipset
+	nfc_chipset {
+		compatible = "oplus-nfc-chipset";
+		mixed-chipset = <1>;
+		id-gpio = <&tlmm 126 0x00>;
+		id_count = <2>;
+		id-0-key = <0>;
+		id-0-value-chipset = "PN560";
+		id-0-value-manifest-path = "/odm/etc/vintf/manifest/nfc-service.xml";
+		id-0-value-feature-path = "/odm/etc/permissions/com.oplus.nfc_feature.xml";
+		id-1-key = <1>;
+		id-1-value-chipset = "PN560DZ";
+		id-1-value-manifest-path = "/odm/etc/vintf/manifest/nfc-service.xml";
+		id-1-value-feature-path = "/odm/etc/permissions/com.oplus.nfc_feature.xml";
+	};
+};
+
+
+&tlmm {
+	nfc {
+		nfc_int_active: nfc_int_active {
+			/* active state */
+			mux {
+				/* GPIO 7 NFC Read Interrupt */
+				pins = "gpio7";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio7";
+				drive-strength = <2>; /* 2 MA */
+				bias-pull-up;
+			};
+		};
+
+		nfc_int_suspend: nfc_int_suspend {
+			/* sleep state */
+			mux {
+				/* GPIO 7 NFC Read Interrupt */
+				pins = "gpio7";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio7";
+				drive-strength = <2>; /* 2 MA */
+				bias-pull-up;
+			};
+		};
+
+		nfc_enable_active: nfc_enable_active {
+            mux {
+                /* Enable, Clock request gpios */
+                pins = "gpio6", "gpio57";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio6", "gpio57";
+                drive-strength = <2>; /* 2 MA */
+                bias-disable;
+            };
+        };
+
+        nfc_enable_suspend: nfc_enable_suspend {
+            mux {
+                pins = "gpio6", "gpio57";
+                function = "gpio";
+            };
+
+            config {
+                pins = "gpio6", "gpio57";
+                drive-strength = <2>; /* 2 MA */
+                bias-disable;
+			};
+		};
+	};
+};
+
+&qupv3_se9_i2c {
+	status = "ok";
+	qcom,clk-freq-out = <400000>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	nq@28 {
+		compatible = "qcom,sn-nci";
+		reg = <0x28>;
+		mixed-chipset = <1>;
+		id-gpio = <&tlmm 126 0x00>;
+		id_count = <2>;
+		id-0-key = <0>;
+		id-0-value-chipset = "PN560";
+		id-1-key = <1>;
+		id-1-value-chipset = "PN560DZ";
+ 		qcom,sn-irq = <&tlmm 7 0x00>;
+ 		qcom,sn-ven = <&tlmm 57 0x00>;
+ 		qcom,sn-clkreq = <&tlmm 6 0x00>;
+ 		interrupt-parent = <&tlmm>;
+ 		interrupts = <7 0>;
+ 		interrupt-names = "nfc_irq";
+ 		pinctrl-names = "nfc_active", "nfc_suspend";
+ 		pinctrl-0 = <&nfc_int_active &nfc_enable_active>;
+ 		pinctrl-1 = <&nfc_int_suspend &nfc_enable_suspend>;
+	};
+};

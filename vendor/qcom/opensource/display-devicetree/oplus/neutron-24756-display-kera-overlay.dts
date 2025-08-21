@@ -1,0 +1,12 @@
+/dts-v1/;
+/plugin/;
+#include <dt-bindings/oplus/hw-id.h>
+#include "../display/kera-sde-display-mtp-overlay.dts"
+#include "kera-display-overlay-common.dtsi"
+#include "neutron-24756-display-kera-overlay.dtsi"
+
+/ {
+	model = "Qualcomm Technologies Inc. Sun MTP,neutron";
+
+	oplus,project-id = <24625 24756 24757 25674 25675>;
+};

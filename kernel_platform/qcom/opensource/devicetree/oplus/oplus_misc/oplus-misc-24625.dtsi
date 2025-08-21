@@ -1,0 +1,46 @@
+&soc {
+	feedback_fb: feedback_fb {
+		compatible = "oplus,haptic-feedback";
+	};
+};
+
+&pm7550ba_eusb2_repeater {
+	qcom,param-override-seq = <0x0f 0x51 0x00 0x52 0x07 0x53 0x00 0x54 0x03 0x55 0x03 0x56 0x07 0x57>;
+	qcom,host-param-override-seq = <0x0f 0x51 0x07 0x53 0x03 0x55 0x07 0x57>;
+};
+
+&soc {
+	usb_nop_phy: usb_nop_phy {
+		compatible = "usb-nop-xceiv";
+	};
+};
+
+&usb0 {
+	dwc3@a600000 {
+		usb-phy = <&eusb2_phy0>, <&usb_nop_phy>;
+		maximum-speed = "high-speed";
+		dr_mode = "otg";
+		snps,usb2-lpm-disable;
+		snps,usb2-gadget-lpm-disable;
+	};
+};
+
+&usb_qmp_dp_phy {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb3phy_portselect_default>;
+	status = "disabled";
+};
+
+&battery_charger {
+	qcom,otg_boost_src = <0>; /* 0:plat_pmic 1:external */
+};
+
+&pm7550ba_bcl {
+	compatible = "qcom,bcl-v5";
+	bcl,support_track;
+};
+
+&pmxr2230_bcl {
+	compatible = "qcom,bcl-v5";
+	bcl,support_track;
+};

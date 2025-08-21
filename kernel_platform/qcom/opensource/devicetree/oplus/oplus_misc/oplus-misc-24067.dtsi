@@ -1,0 +1,224 @@
+&qupv3_se9_i2c {
+	status = "ok";
+	qcom,clk-freq-out = <400000>;
+
+	aw210xx_led@20 {
+		compatible = "awinic,aw210xx_led";
+		reg = <0x20>;
+
+		/* Power Config */
+		enable-gpio = <&tlmm 24 0x1>;
+		//vbled-enable-gpio = <&tlmm 176 0x1>;
+		vbled-supply = <&L13B>;
+		vbled_volt = <3300000>;
+
+		led_groups_num = <2>;
+		led_allocation_order = <0 1>;
+		global_current_max = <0x80>;
+		global_current_min = <0x0b>;
+		osc_clk = <1>;
+		br_res = <1>;
+		status = "okay";
+
+		aw210xx,red {
+			aw210xx,name = "red";
+			aw210xx,id = <0>;
+			aw210xx,imax = <1>;
+			aw210xx,led_default_trigger = "none";
+			aw210xx,brightness = <0>;
+			aw210xx,max-brightness = <255>;
+			aw210xx,rise-time-ms = <5>;
+			aw210xx,hold-time-ms = <0>;
+			aw210xx,fall-time-ms = <0>;
+			aw210xx,off-time-ms = <0>;
+			aw210xx,color_ratio = <1 2>;
+		};
+		aw210xx,green {
+			aw210xx,name = "green";
+			aw210xx,id = <1>;
+			aw210xx,imax = <1>;
+			aw210xx,led_default_trigger = "none";
+			aw210xx,brightness = <0>;
+			aw210xx,max-brightness = <255>;
+			aw210xx,rise-time-ms = <5>;
+			aw210xx,hold-time-ms = <0>;
+			aw210xx,fall-time-ms = <0>;
+			aw210xx,off-time-ms = <0>;
+			aw210xx,color_ratio = <1 1>;
+		};
+		aw210xx,blue {
+			aw210xx,name = "blue";
+			aw210xx,id = <2>;
+			aw210xx,imax = <1>;
+			aw210xx,led_default_trigger = "none";
+			aw210xx,brightness = <0>;
+			aw210xx,max-brightness = <255>;
+			aw210xx,rise-time-ms = <5>;
+			aw210xx,hold-time-ms = <0>;
+			aw210xx,fall-time-ms = <0>;
+			aw210xx,off-time-ms = <0>;
+			aw210xx,color_ratio = <1 2>;
+		};
+	};
+};
+
+&pmxr2230_led_controller {
+	status = "disabled";
+};
+
+&pmxr2230_pwm_2 {
+	status = "okay";
+};
+
+&pmxr2230_gpios {
+	pwm_out {
+		pwm_out_default: pwm_out_default {
+			pins = "gpio9";
+			function = "func1"; /* Special Function 1 */
+			bias-disable;
+			power-source = <1>; /* 1.8V */
+			output-low;
+			qcom,drive-strength = <3>; /* HIGH strength */
+			input-disable;
+		};
+	};
+};
+
+&pm8550ve_f_gpios {
+	reg_en_default: reg_en_default {
+		pins = "gpio5";
+		function = "normal";
+		bias-disable;
+		power-source = <1>; /* 1.8V */
+		output-low;
+		qcom,drive-strength = <3>; /* HIGH strength */
+		input-disable;
+	};
+};
+
+&tlmm {
+	fg_irq_gpio_default:fg_irq_gpio_default {
+		mux {
+			pins = "gpio145";
+			function = "gpio";
+		};
+
+		config {
+			pins = "gpio145";
+			drive-strength = <2>;/* 2 mA */
+			bias-pull-up;
+			input-enable;
+		};
+	};
+};
+
+&soc {
+	pwm_fan: pwm_fan {
+		compatible = "oplus,pwm-fan";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pwm_out_default>, <&reg_en_default>, <&fg_irq_gpio_default>;
+
+		reg-en-gpio = <&pm8550ve_f_gpios 5 0>;
+		fg-irq-gpio = <&tlmm 145 0x2008>;
+		pwms = <&pmxr2230_pwm_2 0 40000>;
+
+		fan,device_id0 {
+			pulses-per-revolution = <2>;
+			duty-config = <30 40 50 70 100>;//level 1 ~ level 5
+		};
+
+		fan,device_id1 {
+			pulses-per-revolution = <3>;
+			duty-config = <35 45 60 80 100>;//level 1 ~ level 5
+		};
+	};
+};
+
+&pm7550ba_eusb2_repeater {
+	qcom,param-override-seq = <0x0a 0x51 0x06 0x53 0x00 0x54 0x03 0x55 0x05 0x57>;
+	qcom,host-param-override-seq = <0x05 0x51 0x06 0x53 0x00 0x54 0x01 0x55 0x01 0x57>;
+};
+
+&soc {
+	usb_nop_phy: usb_nop_phy {
+		compatible = "usb-nop-xceiv";
+	};
+};
+
+&usb0 {
+/delete-property/ extcon;
+	dwc3@a600000 {
+		usb-phy = <&eusb2_phy0>, <&usb_nop_phy>;
+		maximum-speed = "high-speed";
+		dr_mode = "otg";
+		snps,usb2-lpm-disable;
+		snps,usb2-gadget-lpm-disable;
+	};
+};
+
+&usb_qmp_dp_phy {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb3phy_portselect_default>;
+	status = "disabled";
+};
+
+&tlmm {
+	aw_haptics: aw_haptics {
+		aw_irq_gpio_default: aw_irq_gpio_default {
+			mux {
+				pins = "gpio29";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio29";
+				drive-strength = <2>;
+				input-enable;
+				bias-pull-up;
+			};
+		};
+	};
+};
+
+&pm7550ba_vib {
+	status = "disabled";
+};
+
+&qupv3_se10_i2c {
+	qcom,clk-freq-out = <1000000>;
+	status = "ok";
+	aw_haptic@5A {
+		compatible = "oplus,aw_haptic";
+		reg = <0x5A>;
+		reset-gpio = <&tlmm 58 0>;
+		irq-gpio = <&tlmm 29 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&aw_irq_gpio_default>;
+		status = "ok";
+		qcom,device_id = <809>; /* 809 */
+		/* haptic ic : aw86927 */
+		aw8692x_boost_voltage = <0x54>;
+		aw8692x_vmax = /bits/ 8 < 0x28 0x28 0x28 0x28 0x28 0x28 0x2C 0x30 0x34 0x38 0x3C 0x40 0x44 0x48 0x4C 0x50 0x54 >;
+		aw8692x_gain = /bits/ 8 < 0x49 0x51 0x5A 0x62 0x6B 0x73 0x7C 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 >;
+
+		oplus,livetap_support;
+		oplus,auto_break_mode_support;
+		aw8692x_d2s_gain = /bits/ 8 <0x6>;
+		aw8692x_cont_brk_time = /bits/ 8 <0x6>;
+		aw8692x_cont_brk_gain = /bits/ 8 <0x8>;
+	};
+};
+
+&soc {
+	feedback_fb: feedback_fb {
+		compatible = "oplus,haptic-feedback";
+	};
+};
+
+&pm7550ba_bcl {
+	bcl,support_track;
+};
+
+&battery_charger {
+        qcom,otg_boost_src = <0>; /* 0:plat_pmic 1:external */
+};

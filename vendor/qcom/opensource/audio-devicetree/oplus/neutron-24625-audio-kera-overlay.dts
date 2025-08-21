@@ -1,0 +1,12 @@
+/dts-v1/;
+/plugin/;
+#include <dt-bindings/oplus/hw-id.h>
+#include "../kera-audio-mtp.dts"
+#include "kera-audio-overlay-common.dtsi"
+#include "neutron-24625-audio-kera-overlay.dtsi"
+
+/ {
+    model = "Qualcomm Technologies, Inc. Kera MTP,neutron";
+
+    oplus,project-id = <24625 24757 24756 25674 25675>;
+};
