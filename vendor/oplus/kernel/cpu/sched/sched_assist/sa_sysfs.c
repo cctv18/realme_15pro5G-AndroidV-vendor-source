@@ -32,14 +32,6 @@
 #include "sa_group.h"
 #endif
 
-#ifdef CONFIG_HMBIRD_SCHED
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-/*Only Qcom support GKI hmbird*/
-#include <linux/sched/sched_ext.h>
-#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-#include <linux/sched/hmbird_version.h>
-#endif
-
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_SCHED_DDL)
 #include "sa_ddl.h"
 #endif
@@ -1071,81 +1063,6 @@ static ssize_t proc_ncsw_read(struct file *file, char __user *buf,
 	return simple_read_from_buffer(buf, count, ppos, buffer, len);
 }
 #endif
-#ifdef CONFIG_HMBIRD_SCHED
-pid_t g_read_sp_pid = -1;
-static ssize_t proc_sched_prop_write(struct file *file, const char __user *buf,
-		size_t count, loff_t *ppos)
-{
-	char buffer[MAX_SET];
-	int pid;
-	unsigned long sched_prop;
-	struct task_struct *task;
-	int ret = -1;
-
-	memset(buffer, 0, sizeof(buffer));
-
-	if (count > sizeof(buffer) - 1)
-		count = sizeof(buffer) - 1;
-
-	if (copy_from_user(buffer, buf, count))
-		return -EFAULT;
-
-	buffer[count] = '\0';
-	if (sscanf(buffer, "%d %lu\n", &pid, &sched_prop) != 2)
-		goto exit;
-
-	if (pid > 0 && pid <= PID_MAX_LIMIT) {
-		rcu_read_lock();
-		task = find_task_by_vpid(pid);
-		if (task) {
-			if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
-				#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-				/*Only Qcom support GKI hmbird*/
-				ret = sched_set_sched_prop(task, sched_prop);
-				#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-			} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
-				ret = hmbird_set_sched_prop(task, sched_prop);
-			}
-		}
-		rcu_read_unlock();
-	}
-exit:
-	g_read_sp_pid = ret ? -1 : pid;
-	return count;
-}
-
-static ssize_t proc_sched_prop_read(struct file *file, char __user *buf,
-		size_t count, loff_t *ppos)
-{
-	char buffer[64];
-	size_t len;
-	struct task_struct *task;
-	unsigned long sp = -1;
-	pid_t pid = -1;
-	if (g_read_sp_pid != -1) {
-		rcu_read_lock();
-		task = find_task_by_vpid(g_read_sp_pid);
-		if (task) {
-			if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
-				#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-				sp = sched_get_sched_prop(task);
-				#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-			} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
-				sp = hmbird_get_sched_prop(task);
-			}
-			if (sp != (unsigned long)-1)
-				pid = task->pid;
-		}
-		rcu_read_unlock();
-	}
-	if (pid == -1)
-		len = snprintf(buffer, sizeof(buffer), "-1\n");
-	else
-		len = snprintf(buffer, sizeof(buffer), "%d %lu\n", pid, sp);
-
-	return simple_read_from_buffer(buf, count, ppos, buffer, len);
-}
-#endif
 
 static ssize_t proc_lowend_plat_opt_write(struct file *file, const char __user *buf,
 		size_t count, loff_t *ppos)
@@ -1259,13 +1176,6 @@ static const struct proc_ops proc_ncsw_fops = {
 	.proc_read		= proc_ncsw_read,
 };
 #endif
-#ifdef CONFIG_HMBIRD_SCHED
-static const struct proc_ops proc_sched_prop_fops = {
-	.proc_write		= proc_sched_prop_write,
-	.proc_read		= proc_sched_prop_read,
-	.proc_lseek		= default_llseek,
-};
-#endif
 
 static const struct proc_ops proc_lowend_plat_opt_fops = {
 	.proc_write		= proc_lowend_plat_opt_write,
@@ -1372,13 +1282,6 @@ int oplus_sched_assist_proc_init(void)
 	if (!proc_node) {
 		ux_err("failed to create proc node ncsw\n");
 		remove_proc_entry("nr_switches", d_sched_assist);
-	}
-#endif
-#ifdef CONFIG_HMBIRD_SCHED
-	proc_node = proc_create("sched_prop", 0666, d_sched_assist, &proc_sched_prop_fops);
-	if (!proc_node) {
-		ux_err("failed to create proc node sched_prop\n");
-		remove_proc_entry("sched_prop", d_sched_assist);
 	}
 #endif
 

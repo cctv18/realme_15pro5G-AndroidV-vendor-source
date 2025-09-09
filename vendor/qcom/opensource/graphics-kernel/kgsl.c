@@ -5331,13 +5331,6 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 
 	sched_set_fifo(device->events_worker->task);
 
-#ifdef CONFIG_HMBIRD_SCHED
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
-	hmbird_set_sched_prop(device->events_worker->task, SCHED_PROP_DEADLINE_LEVEL3);
-#else
-	sched_set_sched_prop(device->events_worker->task, SCHED_PROP_DEADLINE_LEVEL3);
-#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) */
-#endif
 	status = kgsl_reclaim_init();
 	if (status)
 		goto error_pwrctrl_close;

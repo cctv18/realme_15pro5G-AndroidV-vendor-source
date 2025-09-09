@@ -21,10 +21,6 @@
 #include "sa_balance.h"
 #endif
 
-#ifdef CONFIG_HMBIRD_SCHED
-#include <linux/sched/hmbird_version.h>
-#endif /* CONFIG_HMBIRD_SCHED */
-
 struct kmem_cache *oplus_task_struct_cachep;
 EXPORT_SYMBOL(oplus_task_struct_cachep);
 
@@ -210,15 +206,6 @@ static void init_oplus_task_struct(void *ptr)
 #if IS_ENABLED(CONFIG_ARM64_AMU_EXTN) && IS_ENABLED(CONFIG_OPLUS_FEATURE_CPU_JANKINFO)
 	ots->amu_cycle = 0;
 	ots->amu_instruct = 0;
-#endif
-#ifdef CONFIG_HMBIRD_SCHED
-	if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
-		INIT_LIST_HEAD(&ots->scx.dsq_node.fifo);
-		RB_CLEAR_NODE(&ots->scx.dsq_node.priq);
-		ots->scx.sticky_cpu = -1;
-		ots->scx.runnable_at = INITIAL_JIFFIES;
-		ots->scx.gdsq_idx = DEFAULT_CGROUP_DL_IDX;
-	}
 #endif
 
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_POWERMODEL)

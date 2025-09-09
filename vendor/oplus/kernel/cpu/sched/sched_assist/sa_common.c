@@ -59,7 +59,6 @@
 #include "sa_pipeline.h"
 #endif
 #include "sa_exec.h"
-#include "sa_hmbird.h"
 
 #define CREATE_TRACE_POINTS
 #include "cputime.h"
@@ -76,11 +75,6 @@
 
 #define inherit_ux_offset_of(type)			(type * INHERIT_UX_SEC_WIDTH)
 #define inherit_ux_mask_of(type)			((u64)(INHERIT_UX_MASK_BASE) << (inherit_ux_offset_of(type)))
-
-#ifdef CONFIG_HMBIRD_SCHED
-#include <linux/sched/hmbird.h>
-#include <linux/sched/hmbird_version.h>
-#endif
 
 #define inherit_ux_get_bits(value, type)	((value & inherit_ux_mask_of(type)) >> inherit_ux_offset_of(type))
 #define inherit_ux_value(type, value)		((u64)value << inherit_ux_offset_of(type))
@@ -150,7 +144,6 @@ void register_sched_assist_locking_ops(struct sched_assist_locking_ops *ops)
 }
 EXPORT_SYMBOL_GPL(register_sched_assist_locking_ops);
 #endif
-
 
 #define TOPAPP 4
 #define BGAPP  3
@@ -576,7 +569,7 @@ set:
 	ots->ux_state = ux_state;
 
 	/* if ux is disabled, task only removed from list, not insert to list. */
-	if (unlikely(!global_sched_assist_enabled) || test_task_is_hmbird(t)) {
+	if (unlikely(!global_sched_assist_enabled)) {
 		if (!oplus_rbnode_empty(&ots->ux_entry)) {
 			update_ux_timeline_task_removal(orq, ots, &t->se, task_current(rq, t));
 			put_task_struct(t);
@@ -1145,9 +1138,6 @@ static void enqueue_ux_thread(struct rq *rq, struct task_struct *p)
 
 	ots = get_oplus_task_struct(p);
 	if (IS_ERR_OR_NULL(ots))
-		return;
-
-	if (test_task_is_hmbird(p))
 		return;
 
 	if (!test_task_is_fair(p) || !oplus_rbnode_empty(&ots->ux_entry))
@@ -1726,47 +1716,10 @@ void android_rvh_find_lowest_rq_handler(void *unused,
 		*best_cpu = cpumask_first(local_cpu_mask);
 }
 
-#ifdef CONFIG_HMBIRD_SCHED
-void scx_sched_fork(struct task_struct *p)
-{
-	struct oplus_task_struct *ots = get_oplus_task_struct(p);
-	struct oplus_task_struct *curr_ots = get_oplus_task_struct(current);
-	if (IS_ERR_OR_NULL(ots))
-		return;
-
-	ots->scx.dsq = NULL;
-	INIT_LIST_HEAD(&ots->scx.dsq_node.fifo);
-	RB_CLEAR_NODE(&ots->scx.dsq_node.priq);
-	ots->scx.flags = 0;
-	ots->scx.dsq_flags = 0;
-	ots->scx.sticky_cpu = -1;
-	ots->scx.runnable_at = INITIAL_JIFFIES;
-	ots->scx.slice = SCX_SLICE_DFL;
-	ots->scx.sched_prop = 0;
-	ots->scx.ext_flags = 0;
-	ots->scx.prio_backup = 0;
-	ots->scx.gdsq_idx = DEFAULT_CGROUP_DL_IDX;
-	memset(&ots->scx.sts, 0, sizeof(struct scx_task_stats));
-	if (!IS_ERR_OR_NULL(curr_ots)) {
-		if ((curr_ots->scx.ext_flags & EXT_FLAG_RT_CHANGED) && !p->sched_reset_on_fork) {
-			ots->scx.ext_flags |= EXT_FLAG_RT_CHANGED;
-			ots->scx.prio_backup = curr_ots->scx.prio_backup;
-		}
-		if (curr_ots->scx.ext_flags & EXT_FLAG_CFS_CHANGED)
-			ots->scx.ext_flags |= EXT_FLAG_CFS_CHANGED;
-	}
-}
-#endif
-
 /* register vender hook in kernel/sched/core.c */
 void android_rvh_sched_fork_handler(void *unused, struct task_struct *p)
 {
 	init_task_ux_info(p);
-#ifdef CONFIG_HMBIRD_SCHED
-	if(HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
-		scx_sched_fork(p);
-	}
-#endif
 }
 
 void android_rvh_after_enqueue_task_handler(void *unused, struct rq *rq, struct task_struct *p, int flags)
@@ -2325,3 +2278,7 @@ void android_vh_reweight_entity_handler(void *unused, struct sched_entity *se)
 	}
 }
 #endif
+
+void set_ux_task_dsq_id(struct task_struct *task)
+{
+}

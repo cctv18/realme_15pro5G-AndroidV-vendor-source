@@ -12,14 +12,6 @@
 #include <linux/types.h>
 #include <linux/errno.h>
 #include <linux/spinlock.h>
-#ifdef CONFIG_HMBIRD_SCHED
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-/*Only Qcom support GKI hmbird*/
-#include <linux/sched/sched_ext.h>
-#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-#include <linux/sched/hmbird_version.h>
-#include "es4g/es4g_assist_common.h"
-#endif
 
 #include "game_ctrl.h"
 
@@ -208,11 +200,7 @@ static int rt_info_show(struct seq_file *m, void *v)
 	pid_t tracked_pids[MAX_TRACKED_TASK_NUM];
 	int tracked_pid_num = 0;
 	ssize_t len = 0;
-#ifdef CONFIG_HMBIRD_SCHED
-#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-	int prop;
-#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-#endif
+	/* unsigned long flags; */
 
 	if (atomic_read(&have_valid_render_pid) == 0)
 		return -ESRCH;
@@ -259,20 +247,6 @@ static int rt_info_show(struct seq_file *m, void *v)
 
 			len += snprintf(page + len, RESULT_PAGE_SIZE - len, "%d;%s;%u\n",
 				results[i].pid, task_name, results[i].wake_count);
-#ifdef CONFIG_HMBIRD_SCHED
-			/* only mark top 5 */
-			if (i < 5) {
-				if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
-					#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
-					/*Only Qcom support GKI hmbird*/
-					prop = sched_prop_get_top_thread_id(results[i].task);
-					sched_set_sched_prop(results[i].task, SCHED_PROP_DEADLINE_LEVEL3 | prop << SCHED_PROP_TOP_THREAD_SHIFT);
-					#endif /* #ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
-				} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
-					hmbird_set_sched_prop(results[i].task, SCHED_PROP_DEADLINE_LEVEL3);
-				}
-			}
-#endif /* CONFIG_HMBIRD_SCHED */
 		}
 	}
 

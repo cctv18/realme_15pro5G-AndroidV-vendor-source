@@ -58,7 +58,6 @@
 #define DEBUG_DYNAMIC_PREEMPT (1 << 5)
 #define DEBUG_AMU_INSTRUCTION (1 << 6)
 #define DEBUG_VERBOSE  (1 << 10)       /* used for frameboost */
-#define DEBUG_SET_DSQ_ID (1 << 11) /* used for hmbird */
 
 /* define for sched assist feature */
 #define FEATURE_COMMON (1 << 0)
@@ -794,4 +793,11 @@ int sa_blockio_init(void);
 void sa_blockio_exit(void);
 #endif
 extern struct notifier_block process_exit_notifier_block;
+
+enum SET_DSQ_WHEN_UX {
+	SET_DSQ_WHEN_STATIC_UX,
+	SET_DSQ_WHEN_INHERIT_UX,
+	UNSET_DSQ_WHEN_UX,
+};
+void set_ux_task_dsq_id(struct task_struct *task);
 #endif /* _OPLUS_SA_COMMON_H_ */
