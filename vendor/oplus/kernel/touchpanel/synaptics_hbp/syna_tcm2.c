@@ -95,7 +95,14 @@
 #endif
 
 #include <linux/wait.h>
-
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+#ifdef CONFIG_HMBIRD_SCHED
+#ifndef CONFIG_TOUCHPANEL_MTK_PLATFORM
+#include <linux/sched/sched_ext.h>
+#endif /* !CONFIG_TOUCHPANEL_MTK_PLATFORM */
+#include <linux/sched/hmbird_version.h>
+#endif
+#endif
 static DECLARE_WAIT_QUEUE_HEAD(state_waiter);
 
 extern struct platform_device *syna_spi_device;
@@ -1338,7 +1345,20 @@ static irqreturn_t syna_dev_isr(int irq, void *data)
 		goto exit;
 
 	tcm->isr_pid = current->pid;
-
+#if defined(CONFIG_HMBIRD_SCHED) || defined(CONFIG_HMBIRD_SCHED_GKI)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+	if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
+		#ifndef CONFIG_TOUCHPANEL_MTK_PLATFORM
+		/*Only Qcom support GKI hmbird*/
+		sched_set_sched_prop(current, SCHED_PROP_DEADLINE_LEVEL2);
+		#endif /* !CONFIG_TOUCHPANEL_MTK_PLATFORM */
+	} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
+		hmbird_set_sched_prop(current, SCHED_PROP_DEADLINE_LEVEL2);
+	}
+#else
+	sched_set_sched_prop(current, SCHED_PROP_DEADLINE_LEVEL2);
+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) */
+#endif
 #ifdef HAS_SYSFS_INTERFACE
 	if (tcm->is_attn_redirecting) {
 		syna_cdev_redirect_attn(tcm);

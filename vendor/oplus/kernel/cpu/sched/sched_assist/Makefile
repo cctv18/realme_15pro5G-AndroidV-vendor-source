@@ -19,3 +19,4 @@ oplus_bsp_sched_assist-$(CONFIG_OPLUS_CPU_AUDIO_PERF) += sa_audio.o
 oplus_bsp_sched_assist-$(CONFIG_OPLUS_FEATURE_LOADBALANCE) += sa_balance.o
 oplus_bsp_sched_assist-$(CONFIG_OPLUS_FEATURE_PIPELINE) += sa_pipeline.o
 oplus_bsp_sched_assist-$(CONFIG_BLOCKIO_UX_OPT) += sa_blockio.o
+oplus_bsp_sched_assist-y += sa_hmbird.o

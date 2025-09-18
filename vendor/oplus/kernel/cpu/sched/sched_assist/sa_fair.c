@@ -28,6 +28,8 @@
 #include "sa_pipeline.h"
 #endif
 
+#include "sa_hmbird.h"
+
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_SCHED_DDL)
 #include "sa_ddl.h"
 #endif
@@ -637,6 +639,10 @@ void oplus_replace_next_task_fair(struct rq *rq, struct task_struct **p, struct 
 
 	if (unlikely(!global_sched_assist_enabled))
 		return;
+
+	if (is_hmbird_enable()) {
+		return;
+	}
 
 	spin_lock_irqsave(orq->ux_list_lock, irqflag);
 	smp_mb__after_spinlock();

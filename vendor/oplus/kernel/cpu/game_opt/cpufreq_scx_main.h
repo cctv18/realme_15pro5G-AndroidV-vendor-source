@@ -29,5 +29,6 @@
 #include <../kernel/sched/walt/walt.h>
 #include <../kernel/sched/walt/trace.h>
 #endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
+int hmbird_cpufreq_init(void);
 #endif /*__CPUFREQ_SCX_MAIN_H__*/
 

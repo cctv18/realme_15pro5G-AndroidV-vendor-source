@@ -12,6 +12,9 @@
 #include "sa_common.h"
 #include "sa_fair.h"
 #include "sa_balance.h"
+#if defined(CONFIG_HMBIRD_SCHED)
+#include "sa_hmbird.h"
+#endif
 /*
  * When the following macros are enabled, some debug information
  * will be output, which is very helpful for finding bugs.
@@ -2757,6 +2760,11 @@ bool __oplus_tick_balance(void *data, struct rq *rq)
 	if (unlikely(!lb_enable))
 		return false;
 
+#if defined(CONFIG_HMBIRD_SCHED)
+	if (test_task_is_hmbird(rq->curr))
+		return false;
+#endif
+
 #ifdef DEBUG_LB_TEST
 	lb_test_tick();
 #endif
@@ -3692,6 +3700,11 @@ bool __oplus_newidle_balance(void *data, struct rq *this_rq,
 
 	if (unlikely(!lb_enable))
 		return false;
+
+#if defined(CONFIG_HMBIRD_SCHED)
+	if (test_task_is_hmbird(this_rq->curr))
+		return false;
+#endif
 	/*
 	 * Do not pull tasks towards unavailable cpus.
 	 */

@@ -10,6 +10,13 @@
 
 #include "game_ctrl.h"
 #include "yield_opt.h"
+#ifdef CONFIG_HMBIRD_SCHED
+#include "es4g/es4g_assist_ogki.h"
+#include "es4g/es4g_assist_gki.h"
+#include "cpufreq_scx_main.h"
+#include "es4g/es4g_assist_common.h"
+#include <linux/sched/hmbird_version.h>
+#endif /* CONFIG_HMBIRD_SCHED */
 #include "frame_sync.h"
 #include "task_boost/heavy_task_boost.h"
 #include "critical_task_boost.h"
@@ -53,6 +60,35 @@ static int __init game_ctrl_init(void)
 	init_geas_proc_node();
 #endif
 
+#ifdef CONFIG_HMBIRD_SCHED
+	if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
+#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
+		/*Only Qcom support GKI hmbird*/
+		es4g_assist_gki_init();
+#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
+	} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
+		int cpu;
+		bool hmbird_effective = true;
+		for_each_possible_cpu(cpu) {
+			struct hmbird_rq *hrq;
+			struct rq *rq = cpu_rq(cpu);
+			if (!rq) {
+				hmbird_effective = false;
+				break;
+			}
+			hrq = get_hmbird_rq(rq);
+			if (!hrq) {
+				hmbird_effective = false;
+				break;
+			}
+		}
+
+		if (hmbird_effective) {
+			es4g_assist_ogki_init();
+			hmbird_cpufreq_init();
+		}
+	}
+#endif /* CONFIG_HMBIRD_SCHED */
 	yield_opt_init();
 	frame_sync_init();
 	heavy_task_boost_init();
@@ -64,6 +100,17 @@ static int __init game_ctrl_init(void)
 
 static void __exit game_ctrl_exit(void)
 {
+#ifdef CONFIG_HMBIRD_SCHED
+	if (HMBIRD_GKI_VERSION == get_hmbird_version_type()) {
+#ifdef CONFIG_OPLUS_SYSTEM_KERNEL_QCOM
+		/*Only Qcom support GKI hmbird*/
+		es4g_assist_gki_exit();
+#endif /* CONFIG_OPLUS_SYSTEM_KERNEL_QCOM */
+	} else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type()) {
+		es4g_assist_ogki_exit();
+	}
+#endif /* CONFIG_HMBIRD_SCHED */
+
 	heavy_task_boost_exit();
 	hrtimer_boost_exit();
 }

@@ -66,6 +66,12 @@
 #include "oplus_bl_ic_ktz8868.h"
 #endif /* OPLUS_FEATURE_DISPLAY */
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+#ifdef CONFIG_HMBIRD_SCHED
+#include <linux/sched/sched_ext.h>
+#include <linux/sched/hmbird_version.h>
+#endif
+#endif
 /*
  * MSM driver version:
  * - 1.0.0 - initial interface
@@ -135,6 +141,16 @@ static void msm_drm_display_thread_priority_worker(struct kthread_work *work)
 	if (ret)
 		pr_warn("pid:%d name:%s priority update failed: %d\n",
 			current->tgid, task->comm, ret);
+#if defined(CONFIG_HMBIRD_SCHED) || defined(CONFIG_HMBIRD_SCHED_GKI)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0))
+	if (HMBIRD_GKI_VERSION == get_hmbird_version_type())
+		sched_set_sched_prop(task, SCHED_PROP_DEADLINE_LEVEL3);
+	else if (HMBIRD_OGKI_VERSION == get_hmbird_version_type())
+		hmbird_set_sched_prop(task, SCHED_PROP_DEADLINE_LEVEL3);
+#else
+	sched_set_sched_prop(task, SCHED_PROP_DEADLINE_LEVEL3);
+#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) */
+#endif
 }
 
 /**

@@ -26,6 +26,7 @@
 #if IS_ENABLED(CONFIG_OPLUS_FEATURE_LOADBALANCE)
 #include "sa_balance.h"
 #endif
+#include "sa_hmbird.h"
 
 #if IS_ENABLED(CONFIG_OPLUS_SCHED_GROUP_OPT)
 #include "sa_group.h"
@@ -221,6 +222,8 @@ static int __init oplus_sched_assist_init(void)
 	if (_profile_event_register)
 		/* register a notifier to monitor task exit */
 		(*_profile_event_register)(PROFILE_TASK_EXIT, &process_exit_notifier_block);
+
+	hmbird_sched_ops_init();
 
 	ux_debug("sched assist init succeed!\n");
 	return 0;
